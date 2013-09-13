@@ -79,7 +79,7 @@ local function maintain_window(w)
   local moved = false
   for i=1, #w do
     local e = w[i]
-    if not fsm_env.happening_events[e] and (tonumber(e.ts) > ts_cutout or #w>max_events_in_window) then
+    if not fsm_env.happening_events[e] and (tonumber(e.ts) < ts_cutout or #w>max_events_in_window) then
       moved = true
       table.remove(w, i)
     end
@@ -96,23 +96,26 @@ local function step_window()
   end
     
   local ret = {}
-  repeat
-		local notifs, accept, final = evaluate_in_box(fsm_env.step)
-    if accept then
-      --step deberia sacar todo lo reconocido
-      for _, v in ipairs(notifs) do ret[#ret+1] = v end
-      if final then 
-        evaluate_in_box(fsm_env.reset)
+  
+  if #window > 0 then
+    repeat
+		  local notifs, accept, final = evaluate_in_box(fsm_env.step)
+      if accept then
+        --step deberia sacar todo lo reconocido
+        for _, v in ipairs(notifs) do ret[#ret+1] = v end
+        if final then 
+          evaluate_in_box(fsm_env.reset)
+        end
       end
-    end
-  until not accept --at window end
-    
+    until not accept or #window == 0 --at window end
+  end
+  
   return ret
 end
 
 function incomming_event(data)
 	if not fsm_env.step then return {} end
-print ("#incomming_event",  data.watcher_id)
+  print ("#incomming_event",  data.mib)
   
 	window[#window+1] = {event=data, ts=gettime()}
   
@@ -153,12 +156,8 @@ commands["set_fsm_file"] = function (params)
 	    print ("Error opening huge FSM")
 	    return {status = "error, huge fsm has nil location"}
 	end
-	local f = assert(io.open(fsm_name, "r"))
-	local fsm = f:read("*all")
-	f:close()
 	
-	--local runproc, err = loadstring (fsm, fsm_name)
-	local runproc, err = loadfile (fsm)
+	local runproc, err = loadfile (fsm_name)
 	if not runproc then
 		print ("Error loading",err)
 		return {status = tostring(err)}		
