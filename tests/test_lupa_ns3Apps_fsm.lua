@@ -79,26 +79,97 @@ local function is_ev_power(e)
 end
 
 --actions
-local function action_decrease_rate(e)
-	print ("DECREASE RATE!") 
+local lineal_func = function(a,b,x)
+  return a*x+b
+end
+
+local round = function(num)
+  return math.floor(num + 0.5)
+end
+
+local getDomain = function(func)
+  if func == "func_action_kr" or func == "func_action_ir" or func == "func_action_dr" then
+    return "rate", {-3,-2,-1,0,1,2,3}
+  end
+end
+
+local func_action_kr = function(l)
+  return round(lineal_func(-1/3,1,l))
+end
+
+local notif_action_kr = function(l,e)
 	return {
-		{target_host="127.0.0.1", target_service="NS3-PEP", notification_id=math.random(2^30), 
-		command="decrease_rate", level="1", station=e.station},
+    {target_host="127.0.0.1", target_service="NS3-PEP", notification_id=math.random(2^30), 
+	  command="change_rate", level=l, station=e.station},
 	}
 end
-local function action_increase_rate(e)
-	print ("INCREASE RATE!") 
+
+action_action_kr = function(e)
+  local domain, levels = getDomain("func_action_kr")
+  local maxVal = -1
+  local bestLevel
+  for _,l in ipairs(levels) do
+    local ret = func_action_kr(l)
+    if ret > maxVal then
+      bestLevel = l
+    end
+  end
+  return notif_action_kr(bestLevel,e)
+end
+
+local func_action_ir = function(l)
+  return round(lineal_func(1/6,0.5,l))
+end
+
+local notif_action_ir = function(l,e)
 	return {
-		{target_host="127.0.0.1", target_service="NS3-PEP", notification_id=math.random(2^30), 
-		command="increase_rate", level="1", station=e.station},
+    {target_host="127.0.0.1", target_service="NS3-PEP", notification_id=math.random(2^30), 
+	  command="increase_rate", level=l, station=e.station},
 	}
+end
+
+action_action_ir = function(e)
+  local domain, levels = getDomain("func_action_ir")
+  local maxVal = -1
+  local bestLevel
+  for _,l in ipairs(levels) do
+    local ret = func_action_ir(l)
+    if ret > maxVal then
+      bestLevel = l
+    end
+  end
+  return notif_action_ir(bestLevel,e)
+end
+
+local func_action_dr = function(l)
+  return round(lineal_func(-1/6,0.5,l))
+end
+
+local notif_action_dr = function(l,e)
+	return {
+    {target_host="127.0.0.1", target_service="NS3-PEP", notification_id=math.random(2^30), 
+	  command="decrease_rate", level=l, station=e.station},
+	}
+end
+
+action_action_dr = function(e)
+  local domain, levels = getDomain("func_action_dr")
+  local maxVal = -1
+  local bestLevel
+  for _,l in ipairs(levels) do
+    local ret = func_action_dr(l)
+    if ret > maxVal then
+      bestLevel = l
+    end
+  end
+  return notif_action_dr(bestLevel,e)
 end
 
 --transition
 --{state, predicate, new state, action} 
 local fsm = FSM{
-	{"ini",	is_ev_prob_high,		"end", 	{action_increase_rate}	 	},
-	{"ini",	is_ev_prob_low, 	"end", 	{action_decrease_rate} 	},
+	{"ini",	is_ev_prob_high,		"end", 	{action_action_ir}	 	},
+	{"ini",	is_ev_prob_low, 	"end", 	{action_action_dr} 	},
 		{"ini",	is_ev_rate,		"end", nil	},
 				{"ini",	is_ev_power,		"end", nil	},
 				{"end",	nil,	nil, nil	},
