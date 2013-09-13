@@ -56,5 +56,6 @@ env.os.difftime=os.difftime
 env.os.time=os.time
 env.List=list.List
 env.configuration = conf
+env.assert = assert
 
 
