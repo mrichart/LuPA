@@ -39,46 +39,7 @@ end
 
 local shared = {}
 
---begin generated code
---------------------------------------------------------------------------
---initialization
-local initialization_notifs = {
-}
-local initialization_subs = {
-}
---predicates
-local function is_ev_prob_high(e)
-	if e.mib and e.value and string.match(e.mib, "sProb", 1) and tonumber(e.value) > 0.5 then
-	  return 1
-	else
-	  return 0
-	end
-end
-local function is_ev_prob_low(e)
-	if e.mib and e.value and string.match(e.mib, "sProb", 1) and tonumber(e.value) <= 0.5 then
-	  return 1
-	else
-	  return 0
-	end
-end
-
-local function is_ev_rate(e)
-	if e.mib and e.value and string.match(e.mib, "rate", 1) then
-	  return 1
-	else
-	  return 0
-	end
-end
-
-local function is_ev_power(e)
-	if e.mib and e.value and string.match(e.mib, "power", 1) then
-	  return 1
-	else
-	  return 0
-	end
-end
-
---actions
+--auxiliar functions
 local lineal_func = function(a,b,x)
   return a*x+b
 end
@@ -87,10 +48,93 @@ local round = function(num)
   return math.floor(num + 0.5)
 end
 
-local getDomain = function(func)
-  if func == "func_action_kr" or func == "func_action_ir" or func == "func_action_dr" then
-    return "rate", {-3,-2,-1,0,1,2,3}
+local getDomain = function(universe)
+  if universe == "rate" or universe == "power" then
+    return {-3,-2,-1,0,1,2,3}
   end
+end
+
+--functions
+functions.fAnd = function(f1,f2,l)
+  local ret1 = f1(l)
+  local ret2 = f2(l)
+  local maxVal = -100
+  if ret1 < ret2 then
+    return ret1
+  else
+    return ret2
+  end
+end
+
+functions.event_hl = function(loss)
+  if loss < 0.3 then
+    return lineal_func((0.2/0.3),0,loss)
+  else
+    return lineal_func((0.2/0.7),0.5/0.7,loss)
+  end
+end
+
+functions.event_ll = function(loss)
+  if loss < 0.3 then
+    return lineal_func(-(0.2/0.3),1,loss)
+  else
+    return lineal_func(-(0.2/0.7),0.2/0.7,loss)
+  end
+end
+
+functions.event_hp = function(pow)
+  if pow < 10 then
+    return lineal_func((0.5/10),0,pow)
+  else
+    return lineal_func((0.2/7),3.6/7,pow)
+  end
+end
+
+functions.event_mp = function(pow)
+  if pow < 5 then
+    return lineal_func((0.5/5),0,pow)
+  elseif pow < 8 then
+    return lineal_func((0.2/3),0,pow)
+  else
+    return lineal_func((0.2/7),3.6/7,pow)
+  end
+end
+
+events.event_lp(e)
+	if e.mib and e.value and string.match(e.mib, "sProb", 1) then
+	  lineal_func(tonumber(e.value) > 0.5 then
+	  return 1
+	else
+	  return 0
+	end
+end
+
+
+--notifications
+
+
+--begin generated code
+--------------------------------------------------------------------------
+--initialization
+local initialization_notifs = {
+}
+local initialization_subs = {
+}
+--predicates
+
+
+--actions
+
+actions.action1 = function()
+  local levels = getDomain('rate')
+  local maxRet = -100  
+  for _,l in ipairs(levels) do
+    ret = fAnd(f1,f2,l)
+    if ret > maxRet then
+      maxRet = ret
+    end
+  end
+  return maxRet
 end
 
 local func_action_kr = function(l)
