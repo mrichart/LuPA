@@ -195,16 +195,16 @@ local function process_pdp(params)
 
 	--TODO decidir message_type que evaluar en la fsm: trap y/o action y/o response
 	--registramos el evento para la maquina de estados
-	--if message_type == "trap" then
+	if message_type == "trap" then
 	--if message_type ~= "action" then
-  local outgoing=pdp.incomming_event(params)
-    --print("Elementos outgoing : ", table.maxn(outgoing))
-    for _, out in ipairs(outgoing) do
-        local _,err_pdp = skt_pdp:send( generate_pdp_output(out) )
-        --if err_pdp then print ("Error sending outgoing", err_pdp)end
-        --print("An action was pumped in the socket")
-    end		
-	--end
+    local outgoing=pdp.incomming_event(params)
+      --print("Elementos outgoing : ", table.maxn(outgoing))
+      for _, out in ipairs(outgoing) do
+          local _,err_pdp = skt_pdp:send( generate_pdp_output(out) )
+          --if err_pdp then print ("Error sending outgoing", err_pdp)end
+          --print("An action was pumped in the socket")
+      end		
+	end
 end
 
 local function process_rmoon(params)
